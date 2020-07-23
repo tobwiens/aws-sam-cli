@@ -3,33 +3,7 @@ FROM amazon/aws-sam-cli-emulation-image-python3.7
 # Install build tools
 # The base image essentially corrupts the RPM DB,
 #  so we need to make changes for yum to run successfully.
-RUN chmod 1777 /tmp && \
-  /usr/bin/python3 -c "from configparser import SafeConfigParser; \
-  yum_conf = SafeConfigParser(); \
-  yum_conf.read('/etc/yum.conf'); \
-  yum_conf.has_section('main') or yum_conf.add_section('main'); \
-  yum_conf.set('main', 'plugins', '1'); \
-  f = open('/etc/yum.conf', 'w'); \
-  yum_conf.write(f); \
-  f.close();" && \
-  rpm --rebuilddb && \
-  yum groupinstall -y development && \
-  yum install -d1 -y \
-  tar \
-  gzip \
-  unzip \
-  grep \
-  curl \
-  make \
-  gcc-c++ \
-  binutils \
-  procps \
-  libgmp3-dev \
-  zlib1g-dev \
-  liblzma-dev \
-  libxslt-devel \
-  libmpc-devel \
-  && yum clean all
+
 
 # Include build tools for the Function Build image.
 # /opt is used for Lambda Layers. To avoid any potential confusion or
@@ -56,3 +30,7 @@ ENV LANG=en_US.UTF-8
 RUN pip3 install wheel
 
 COPY ATTRIBUTION.txt /
+
+# FIX https://github.com/awslabs/aws-sam-cli/issues/2125
+
+RUN chown -R root:root /var && chown -R root:root /THIRD-PARTY-LICENSES.txt
